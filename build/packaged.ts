@@ -90,6 +90,7 @@ async function main() {
 	// 用 generateAsync + writeFileSync（而非 generateNodeStream().pipe()）：后者不 await，
 	// 进程可能在写完前退出，导致 .eext 残留旧内容（曾因此图片/最新 README 未打进包）。
 	const outPath = path.join(__dirname, 'dist', `${extensionConfig.name}_v${extensionConfig.version}.eext`);
+	fs.ensureDirSync(path.dirname(outPath));
 	const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 9 } });
 	fs.writeFileSync(outPath, buf);
 	console.log(`packaged ${fileList.length} files -> ${outPath}`);
