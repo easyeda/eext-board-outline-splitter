@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>按板框拆分PCB</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      color: #1f2937;
+      background: #f3f4f6;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .grow { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    h1 { font-size: 15px; font-weight: 600; }
+    .muted { color: #6b7280; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; margin-bottom: 7px; }
+    .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .badge { font-size: 12px; font-weight: 600; color: #4338ca; }
+    .list { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+    .item { display: flex; align-items: center; gap: 8px; padding: 4px 4px; border-bottom: 1px solid #f1f5f9; transition: background .12s; }
+    .item:last-child { border-bottom: none; }
+    .item:hover { background: #e0e7ff; }
+    .idx { width: 22px; height: 22px; border-radius: 6px; background: #eef2ff; color: #4338ca; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
+    .item .name { font-weight: 600; }
+    .item .meta { color: #6b7280; font-size: 12px; }
+    .item .info { flex: 1; min-width: 0; }
+    .item .right { display: flex; align-items: center; gap: 6px; flex: none; }
+    label.opt { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    button {
+      width: 100%; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+      background: #4f46e5; color: #fff; transition: background .15s; flex: none;
+    }
+    button:hover:not(:disabled) { background: #4338ca; }
+    button:disabled { background: #c7d2fe; cursor: not-allowed; }
+    button.secondary { background: #dbeafe; color: #1e40af; width: auto; padding: 6px 12px; font-size: 12px; }
+    button.secondary:hover:not(:disabled) { background: #bfdbfe; }
+    button.secondary:disabled { background: #eff6ff; color: #60a5fa; }
+    .bar { height: 6px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .bar > i { display: block; height: 100%; width: 0; background: #4f46e5; transition: width .2s; }
+    .log { margin-top: 6px; font-size: 12px; color: #4b5563; max-height: 90px; overflow-y: auto; }
+    .log div { padding: 2px 0; }
+    .warn { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 7px 10px; border-radius: 8px; margin-bottom: 7px; font-size: 12px; }
+    .tip { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; padding: 7px 10px; border-radius: 8px; margin-bottom: 7px; font-size: 12px; }
+    .err { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+    .ok { background: #dcfce7; border: 1px solid #86efac; color: #166534; }
+    .hidden { display: none !important; }
+    .res { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+    .res th, .res td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #f1f5f9; }
+    .res th { color: #6b7280; font-weight: 600; }
+    .pill { font-size: 11px; padding: 1px 6px; border-radius: 10px; }
+    .pill.created { background: #dcfce7; color: #166534; }
+    .pill.updated { background: #dbeafe; color: #1e40af; }
+    .pill.failed { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="row">
+      <span class="muted">当前 PCB</span>
+      <span class="badge" id="srcName">—</span>
+    </div>
+  </div>
+
+  <div id="warnBox" class="warn hidden"></div>
+
+  <div class="tip">⚠ 拆分前请先保存当前 PCB 文件</div>
+
+  <div class="card grow">
+    <div class="head">
+      <span id="detectTitle" class="muted">检测板框中…</span>
+      <button id="refreshBtn" class="secondary hidden">重新检测</button>
+    </div>
+    <div id="boardList" class="list"></div>
+  </div>
+
+  <div class="card">
+    <label class="opt">
+      <input type="checkbox" id="overwriteExisting" />
+      <span>自动覆盖同名 PCB（不勾选时，遇到重名将中止并报错）</span>
+    </label>
+  </div>
+
+  <button id="runBtn" disabled>开始拆分</button>
+
+  <script src="/iframe/app.js"></script>
+</body>
+</html>

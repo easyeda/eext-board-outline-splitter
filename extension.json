@@ -1,0 +1,46 @@
+{
+	"name": "board-outline-splitter",
+	"uuid": "eb7ba04d628e4bb6a18cefdf864977a6",
+	"displayName": "按板框拆分PCB",
+	"description": "识别 PCB 内多个板框,将每个板框及其内部图元分别复制到独立的游离 PCB 文件中",
+	"version": "1.3.19",
+	"publisher": "EasyEDA",
+	"engines": {
+		"eda": "~3.0.0"
+	},
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "extension-store",
+		"url": ""
+	},
+	"categories": "Other",
+	"keywords": [
+		"Tool",
+		"PCB",
+		"Board Outline",
+		"Split"
+	],
+	"images": {
+		"logo": "./images/logo.png"
+	},
+	"homepage": "",
+	"bugs": "",
+	"activationEvents": {},
+	"entry": "./dist/index",
+	"dependentExtensions": {},
+	"headerMenus": {
+		"pcb": [
+			{
+				"id": "boardSplit",
+				"title": "按板框拆分PCB",
+				"menuItems": [
+					{
+						"id": "SplitBoardOutlines",
+						"title": "进行PCB拆分...",
+						"registerFn": "splitBoardOutlinesToPcbs"
+					}
+				]
+			}
+		]
+	}
+}

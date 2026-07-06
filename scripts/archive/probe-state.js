@@ -1,0 +1,14 @@
+const out = {};
+const info = await eda.dmt_Pcb.getCurrentPcbInfo();
+out.pcb = info ? { uuid: info.uuid, name: info.name } : null;
+const allPcbs = (await eda.dmt_Pcb.getAllPcbsInfo()) || [];
+out.allPcbs = allPcbs.map(p => ({ name: p.name, uuid: p.uuid, parentBoardName: p.parentBoardName }));
+const lines = (await eda.pcb_PrimitiveLine.getAll(undefined, 11)) || [];
+const arcs = (await eda.pcb_PrimitiveArc.getAll(undefined, 11)) || [];
+out.layer11 = { lineCount: lines.length, arcCount: arcs.length };
+out.lineGeo = lines.slice(0, 40).map(l => { try { return { id: l.getState_PrimitiveId(), sx: l.getState_StartX(), sy: l.getState_StartY(), ex: l.getState_EndX(), ey: l.getState_EndY() }; } catch(e) { return { err: String(e) }; } });
+out.arcGeo = arcs.slice(0, 40).map(a => { try { return { id: a.getState_PrimitiveId(), sx: a.getState_StartX(), sy: a.getState_StartY(), ex: a.getState_EndX(), ey: a.getState_EndY(), ang: a.getState_ArcAngle() }; } catch(e) { return { err: String(e) }; } });
+const comps = (await eda.pcb_PrimitiveComponent.getAll()) || [];
+out.compCount = comps.length;
+out.compCenters = comps.slice(0, 60).map(c => { try { return { x: c.getState_X(), y: c.getState_Y() }; } catch(e) { return null; } });
+return out;

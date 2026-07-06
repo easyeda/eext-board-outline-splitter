@@ -1,0 +1,5 @@
+{
+	"识别 PCB 内多个板框,将每个板框及其内部图元分别复制到独立的游离 PCB 文件中": "Identify multiple board outlines in a PCB and copy each outline along with its inner primitives into a separate free-floating PCB file.",
+	"按板框拆分PCB": "Split the PCB by frame",
+	"进行PCB拆分...": "Perform PCB splitting"
+}

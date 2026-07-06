@@ -1,0 +1,11 @@
+const out = {};
+const src = await eda.dmt_Pcb.getCurrentPcbInfo();
+const clone = await eda.dmt_Pcb.copyPcb(src.uuid);
+const all = (await eda.dmt_Pcb.getAllPcbsInfo()) || [];
+const c = all.find((p) => p.uuid === clone);
+out.cloneName = c?.name;
+out.cloneParentBoardName = c?.parentBoardName;
+out.cloneIsFree = !c?.parentBoardName;
+out.allFree = all.filter((p) => !p.parentBoardName).map((p) => ({ name: p.name, uuid: p.uuid }));
+await eda.dmt_Pcb.deletePcb(clone);
+return out;
