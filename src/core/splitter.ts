@@ -95,7 +95,9 @@ export async function splitAll(
   }
 
   // 源 PCB 聚焦时取规则，始终同步到各克隆（不再可选）
+  if (!await activateAndConfirm(srcInfo.uuid)) throw new Error('源 PCB 未就绪，已中止拆分');
   const srcRules = await getCurrentRules();
+  if (!srcRules) throw new Error('读取源 PCB 设计规则失败，已中止拆分');
 
   // copyPcb usually clones the source directly (incl. standalone PCBs). Only when it returns
   // undefined (rare bad-state source) do we attach a temp schematic+board as a fallback.
@@ -128,7 +130,7 @@ export async function splitAll(
 async function splitEachBoard(
   boards: BoardOutline[],
   srcInfo: { uuid: string; name: string },
-  srcRules: { [k: string]: any } | undefined,
+  srcRules: { [k: string]: any },
   progress: ProgressFn,
   results: BoardCopyResult[],
 ): Promise<void> {
@@ -209,18 +211,13 @@ async function splitEachBoard(
       // 6.6 Delete top-layer line board outlines NOT belonging to this board (Polyline not collected by collectAllByType; delete separately).
       await deleteOtherLineOutlines(forceKeepIds);
 
-      // ⑦ 设计规则同步（始终；取规则失败则跳过并告警）
-      if (srcRules) {
-        await overwriteRules(srcRules);
-      }
-      else {
-        console.warn('取源 PCB 设计规则失败，跳过规则同步');
-      }
+      // ⑦ 设计规则同步为必选；失败不能继续标记为成功。
+      if (!await overwriteRules(srcRules)) throw new Error('同步设计规则失败');
 
       // ⑧ 保存
-      await savePcb(cloneUuid);
+      if (!await savePcb(cloneUuid)) throw new Error('保存拆分 PCB 失败');
 
-      const kept = countKept(byType, keep);
+      const kept = countKept(await collectAllByType(), keep);
       results.push({ index: board.index, name: targetName, status, primitiveCount: kept });
       progress({
         phase: 'split',

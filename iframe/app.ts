@@ -237,7 +237,14 @@ $('boardList').addEventListener('mouseleave', () => { if (!busy) clearSelected()
   try {
     const results = await splitAll(boards, srcInfo!, options, progress);
     renderBoards(new Map(results.map((r) => [r.index, r])));
-    ($('runBtn') as HTMLButtonElement).textContent = '完成，可重新拆分';
+    const failedCount = results.filter((r) => r.status === 'failed').length;
+    if (failedCount > 0) {
+      showWarn(`${failedCount} 个 PCB 拆分失败，请查看列表中的失败原因。`, 'err');
+      ($('runBtn') as HTMLButtonElement).textContent = '拆分有失败，可重试';
+    }
+    else {
+      ($('runBtn') as HTMLButtonElement).textContent = '完成，可重新拆分';
+    }
   }
   catch (e) {
     showWarn('拆分失败：' + String(e), 'err');

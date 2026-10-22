@@ -60,8 +60,8 @@ export async function collectAllByType(): Promise<PrimitivesByType> {
         out[k] = (await PRIM_ACCESS[k].getAll()) ?? [];
       }
       catch (e) {
-        console.warn(`getAll ${k} failed:`, e);
-        out[k] = [];
+        console.error(`getAll ${k} failed:`, e);
+        throw new Error(`读取 ${k} 图元失败：${String(e)}`);
       }
     }),
   );
@@ -122,19 +122,25 @@ export async function buildRepPoints(byType: PrimitivesByType): Promise<Map<stri
   return m;
 }
 
-/** 删除 keep 集合之外的图元（按类型调用各自 delete） */
+/** 删除前刷新同类型图元，避免器件级联删除后继续使用失效的焊盘等子图元 ID。 */
 export async function deleteNonKeep(byType: PrimitivesByType, keep: Set<string>): Promise<number> {
   let deleted = 0;
   for (const k of Object.keys(PRIM_ACCESS) as PrimKey[]) {
     const ids = byType[k].map((p: any) => p.getState_PrimitiveId?.()).filter((id: any): id is string => typeof id === 'string');
-    const toDelete = ids.filter((id: string) => !keep.has(id));
-    if (toDelete.length === 0) continue;
+    const candidates = ids.filter((id: string) => !keep.has(id));
+    if (candidates.length === 0) continue;
     try {
-      await PRIM_ACCESS[k].del(toDelete);
+      const liveIds = new Set((await PRIM_ACCESS[k].getAll()).map((p) => p.getState_PrimitiveId()));
+      const toDelete = candidates.filter((id) => liveIds.has(id));
+      if (toDelete.length === 0) continue;
+      if (!await PRIM_ACCESS[k].del(toDelete)) throw new Error('删除接口返回 false');
+      const remainingIds = new Set((await PRIM_ACCESS[k].getAll()).map((p) => p.getState_PrimitiveId()));
+      if (toDelete.some((id) => remainingIds.has(id))) throw new Error('删除后仍存在目标图元');
       deleted += toDelete.length;
     }
     catch (e) {
-      console.warn(`delete ${k} failed:`, e);
+      console.error(`delete ${k} failed:`, e);
+      throw new Error(`删除 ${k} 图元失败：${String(e)}`);
     }
   }
   return deleted;

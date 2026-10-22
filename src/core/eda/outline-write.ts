@@ -44,20 +44,21 @@ export async function deleteOtherBoardOutlines(keepIds: Set<string>): Promise<nu
     }
     await clearSelected();
     if (regionDel.length > 0) {
-      try { await eda.pcb_PrimitiveRegion.delete(regionDel); deleted += regionDel.length; }
-      catch (e) { console.warn('deleteOtherBoardOutlines: region.delete failed:', e); }
+      if (!await eda.pcb_PrimitiveRegion.delete(regionDel)) throw new Error('删除其他板框区域失败');
+      deleted += regionDel.length;
     }
     if (polyDel.length > 0) {
-      try { await eda.pcb_PrimitivePolyline.delete(polyDel); deleted += polyDel.length; }
-      catch (e) { console.warn('deleteOtherBoardOutlines: polyline.delete failed:', e); }
+      if (!await eda.pcb_PrimitivePolyline.delete(polyDel)) throw new Error('删除其他板框折线失败');
+      deleted += polyDel.length;
     }
     if (arcDel.length > 0) {
-      try { await eda.pcb_PrimitiveArc.delete(arcDel); deleted += arcDel.length; }
-      catch (e) { console.warn('deleteOtherBoardOutlines: arc.delete failed:', e); }
+      if (!await eda.pcb_PrimitiveArc.delete(arcDel)) throw new Error('删除其他板框圆弧失败');
+      deleted += arcDel.length;
     }
   }
   catch (e) {
-    console.warn('deleteOtherBoardOutlines failed:', e);
+    console.error('deleteOtherBoardOutlines failed:', e);
+    throw e;
   }
   return deleted;
 }
@@ -81,12 +82,13 @@ export async function deleteOtherLineOutlines(keepIds: Set<string>): Promise<num
       catch { /* ignore */ }
     }
     if (toDelete.length > 0) {
-      try { await eda.pcb_PrimitivePolyline.delete(toDelete); deleted = toDelete.length; }
-      catch (e) { console.warn('deleteOtherLineOutlines: polyline.delete failed:', e); }
+      if (!await eda.pcb_PrimitivePolyline.delete(toDelete)) throw new Error('删除其他顶层线条板框失败');
+      deleted = toDelete.length;
     }
   }
   catch (e) {
-    console.warn('deleteOtherLineOutlines failed:', e);
+    console.error('deleteOtherLineOutlines failed:', e);
+    throw e;
   }
   return deleted;
 }
